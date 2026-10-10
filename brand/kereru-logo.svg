@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 320" width="900" height="320"><rect width="900" height="320" fill="#F7F3EA"/><g transform="translate(40,62) scale(1.15)">
+ <path d="M146,112 L206,150 L199,158 L140,132 Z" fill="#5B2A4E"/>
+ <path d="M64,56 C62,34 94,30 101,52 C127,60 153,86 166,112 C172,125 165,137 151,139 C129,144 103,145 87,137 C67,127 57,96 64,56 Z" fill="#24503B"/>
+ <path d="M67,84 C65,110 75,127 91,133 C105,139 121,139 134,136 C111,130 91,118 81,90 Z" fill="#F7F3EA"/>
+ <path d="M98,70 C126,78 150,100 159,124 C137,120 111,104 98,70 Z" fill="#5B2A4E"/>
+ <path d="M106,78 C126,86 142,102 148,118 C134,112 118,100 106,78 Z" fill="#A67C3D" opacity=".85"/>
+ <path d="M65,52 L50,58 L65,64 Z" fill="#D9553B"/>
+ <circle cx="77" cy="51" r="4.2" fill="#F7F3EA"/><circle cx="77" cy="51" r="2" fill="#D9553B"/>
+ <path d="M94,144 L91,158 M108,145 L106,159" stroke="#D9553B" stroke-width="4" stroke-linecap="round"/>
+</g>
+<text x="300" y="168" font-family="Fraunces, serif" font-size="84" font-weight="600" fill="#24503B">Kereru</text>
+<text x="303" y="222" font-family="Nunito Sans, sans-serif" font-size="30" font-weight="700" letter-spacing="9" fill="#5B2A4E">MARKETING LIMITED</text>
+<rect x="303" y="244" width="70" height="5" rx="2.5" fill="#D9553B"/></svg>
