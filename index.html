@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en" class="antialiased">
+  <head>
+    <meta charset="utf-8" />
+    <!-- viewport-fit=cover: draw under the iPhone notch / home bar; the layout pads with env(safe-area-inset-*). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Felt Ledger</title>
+    <meta name="description" content="Study low-stakes Hold'em. Import hand histories, find leaks, keep the edge." />
+    <meta name="theme-color" content="#0b0c0b" />
+    <meta name="format-detection" content="telephone=no" />
+    <!-- Add to Home Screen: opens full screen like an app. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Felt Ledger" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+    <script type="module" crossorigin src="./assets/index-DtFQwTxa.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/router-DTv_Xs5V.js">
+    <link rel="modulepreload" crossorigin href="./assets/charts-Doc3xU3k.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-Zo_5enw-.css">
+  </head>
+  <body style="margin:0;background:#0b0c0b;color:#f2f5f2">
+    <!--
+      Boot screen: plain HTML + inline styles, visible before any JS/CSS loads, padded for the notch /
+      home bar. React replaces it on first render. The inline script below (no module dependency):
+        - reports start-up stages + errors to /api/clientlog (serve.py appends them to ~/FeltLedger/clientlog.txt),
+        - writes start-up errors onto this screen,
+        - after 8 s without the app mounting, shows "Still loading…" with Reload / Reset buttons.
+    -->
+    <div id="root">
+      <div id="boot" style="box-sizing:border-box;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(24px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));font:17px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;text-align:center;color:#f2f5f2;background:#0b0c0b">
+        <div style="font-size:30px;font-weight:700;letter-spacing:-0.02em;color:#f2f5f2">Felt <span style="color:#39FF14">Ledger</span></div>
+        <div id="boot-msg" style="color:#f2f5f2;font-size:18px">Loading Felt Ledger…</div>
+        <div id="boot-sub" style="color:#b9c2b9;font-size:14px;max-width:22rem">Your poker study notebook. Hands, ranges, trainer and bankroll; your hands sync from your Mac in the background. If this screen stays for more than a few seconds, use the buttons that appear below.</div>
+        <div id="boot-err" style="display:none;max-width:34rem;width:100%;box-sizing:border-box;text-align:left;background:#2a1212;border:1px solid #7a2a2a;border-radius:10px;padding:12px 14px;color:#ffd6d6;font-size:14px;white-space:pre-wrap;word-break:break-word"></div>
+        <div id="boot-actions" style="display:none;gap:10px;flex-wrap:wrap;justify-content:center">
+          <button type="button" onclick="location.reload()" style="min-height:44px;padding:0 18px;border-radius:10px;border:1px solid #4a544a;background:#1b1f1b;color:#f2f5f2;font:inherit">Reload</button>
+          <button type="button" onclick="window.__felt.reset()" style="min-height:44px;padding:0 18px;border-radius:10px;border:1px solid #4a544a;background:#1b1f1b;color:#f2f5f2;font:inherit">Reset this device's copy</button>
+        </div>
+        <noscript><div style="color:#ffd6d6">Felt Ledger needs JavaScript turned on.</div></noscript>
+      </div>
+    </div>
+    <script>
+      // Pre-React safety net + start-up beacon (classic inline script: runs even if the module bundle never does).
+      (function () {
+        var F = (window.__felt = window.__felt || { errors: [] });
+        var t0 = Date.now();
+        var sid = t0.toString(36).slice(-4) + Math.random().toString(36).slice(2, 6);
+        var seq = 0;
+        var frames = 0;
+        var standalone = !!navigator.standalone;
+        var dm = false;
+        try { dm = matchMedia('(display-mode: standalone)').matches; } catch (e) {}
+        F.sid = sid;
+        // Hosted build (GitHub Pages): there is no Mac server to log to.
+        var HOSTED = 'hosted' === 'hosted';
+        F.hosted = HOSTED;
+        F.stages = [];
+        function send(stage, data) {
+          if (seq >= 150) return;
+          F.stages.push(stage);
+          if (HOSTED) { seq++; return; }
+          var body = { sid: sid, seq: ++seq, stage: stage, ms: Date.now() - t0, vis: document.visibilityState, rs: document.readyState, sa: standalone, dm: dm, frames: frames, data: data == null ? null : data };
+          if (seq === 1) { body.ua = navigator.userAgent; body.url = location.href; body.vp = innerWidth + 'x' + innerHeight + '@' + (window.devicePixelRatio || 1); body.ref = document.referrer; }
+          var json;
+          try { json = JSON.stringify(body); } catch (e) { json = JSON.stringify({ sid: sid, seq: seq, stage: stage, bad: String(e) }); }
+          if (json.length > 60000) json = json.slice(0, 60000);
+          try { if (navigator.sendBeacon && navigator.sendBeacon('/api/clientlog', new Blob([json], { type: 'text/plain' }))) return; } catch (e) {}
+          try { fetch('/api/clientlog', { method: 'POST', body: json, keepalive: true, headers: { 'Content-Type': 'text/plain' } }).catch(function () {}); } catch (e) {}
+        }
+        F.log = send;
+        var mounted = false;
+        F.booted = function () { F.isBooted = true; };
+        F.mounted = function () { if (!mounted) { mounted = true; send('app-mounted'); } };
+        send('html-parsed');
+        // Paint probe: frames only advance while the page is actually rendering.
+        var stopFrames = t0 + 60000;
+        (function frame() { frames++; if (frames === 1) send('first-frame'); if (Date.now() < stopFrames) requestAnimationFrame(frame); })();
+        function state() {
+          var b = document.getElementById('boot');
+          var root = document.getElementById('root');
+          return { booted: !!F.isBooted, mounted: mounted, bootScreen: !!b, rootKids: root ? root.childElementCount : -1, text: (document.body.innerText || '').slice(0, 80).replace(/\s+/g, ' '), errors: F.errors.slice(-5), stages: F.stages.slice(-12) };
+        }
+        [1000, 3000, 8000, 20000, 45000].forEach(function (ms) { setTimeout(function () { if (!mounted || ms <= 3000) send('tick-' + ms / 1000 + 's', state()); }, ms); });
+        document.addEventListener('visibilitychange', function () { send('visibility-' + document.visibilityState); });
+        window.addEventListener('pageshow', function (e) { send('pageshow', { persisted: !!e.persisted }); });
+        window.addEventListener('pagehide', function (e) { send('pagehide', { persisted: !!e.persisted }); });
+        window.addEventListener('DOMContentLoaded', function () { send('dom-content-loaded'); });
+        window.addEventListener('load', function () { send('load'); });
+
+        function show(msg) {
+          var err = document.getElementById('boot-err');
+          var acts = document.getElementById('boot-actions');
+          var m = document.getElementById('boot-msg');
+          if (!err) return; // React already took over: src/boot/errors.ts reports from here on
+          if (m) m.textContent = 'Felt Ledger hit a problem while starting:';
+          err.style.display = 'block';
+          err.textContent = (err.textContent ? err.textContent + '\n\n' : '') + msg;
+          if (acts) acts.style.display = 'flex';
+        }
+        F.showBootError = show;
+        // Same as src/boot/recovery.ts resetDeviceCopy: drop this device's saved hands, re-sync from the Mac.
+        F.reset = function () {
+          if (!confirm("Delete this device's saved hands and re-sync them from the Mac?")) return;
+          send('reset-device-copy');
+          var done = function () { location.replace(HOSTED ? location.pathname : '/'); };
+          try { localStorage.removeItem('felt-ledger-v1'); localStorage.removeItem('felt-ledger-boot'); localStorage.removeItem('felt-ledger-pool-rev'); } catch (e) {}
+          try { var r = indexedDB.deleteDatabase('felt-ledger'); r.onsuccess = r.onerror = r.onblocked = done; setTimeout(done, 3000); } catch (e) { done(); }
+        };
+        window.addEventListener('error', function (e) {
+          var t = e && e.target;
+          if (t && t !== window && (t.src || t.href)) { send('resource-error', { src: t.src || t.href }); show('Could not load ' + (t.src || t.href)); return; }
+          var msg = String((e && e.message) || e);
+          F.errors.push(msg);
+          send('error', { message: msg, file: e && e.filename, line: e && e.lineno, col: e && e.colno, stack: e && e.error && String(e.error.stack || '').slice(0, 2000) });
+          if (!F.isBooted) show(msg + (e && e.filename ? '\n' + e.filename + ':' + e.lineno : ''));
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) {
+          var r = e && e.reason;
+          var msg = String((r && r.message) || r);
+          F.errors.push(msg);
+          send('unhandledrejection', { message: msg, stack: r && String(r.stack || '').slice(0, 2000) });
+          if (!F.isBooted) show('Unhandled: ' + String((r && (r.stack || r.message)) || r));
+        });
+        // Watchdog: no app after 8 s → visible message + Reload / Reset, whether or not React replaced the boot screen.
+        setTimeout(function () {
+          if (mounted) return;
+          send('stalled-8s', state());
+          var m = document.getElementById('boot-msg');
+          var acts = document.getElementById('boot-actions');
+          if (m && acts) {
+            m.textContent = 'Still loading… tap Reload, or Reset this device\u2019s copy';
+            acts.style.display = 'flex';
+            return;
+          }
+          var o = document.createElement('div');
+          o.setAttribute('data-testid', 'boot-stalled');
+          o.style.cssText = 'position:fixed;inset:0;z-index:2147483646;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;background:rgba(11,12,11,.96);color:#f2f5f2;font:17px/1.45 -apple-system,system-ui,sans-serif;text-align:center';
+          o.innerHTML = '<div>Still loading… tap Reload, or Reset this device\u2019s copy</div><div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><button type="button" style="min-height:44px;padding:0 18px;border-radius:10px;border:1px solid #4a544a;background:#1b1f1b;color:#f2f5f2;font:inherit">Reload</button><button type="button" style="min-height:44px;padding:0 18px;border-radius:10px;border:1px solid #4a544a;background:#1b1f1b;color:#f2f5f2;font:inherit">Reset this device\u2019s copy</button><button type="button" style="min-height:44px;padding:0 18px;border-radius:10px;border:1px solid #4a544a;background:transparent;color:#b9c2b9;font:inherit">Keep waiting</button></div>';
+          var bs = o.getElementsByTagName('button');
+          bs[0].onclick = function () { location.reload(); };
+          bs[1].onclick = function () { F.reset(); };
+          bs[2].onclick = function () { o.remove(); };
+          document.body.appendChild(o);
+        }, 8000);
+      })();
+    </script>
+  </body>
+</html>
